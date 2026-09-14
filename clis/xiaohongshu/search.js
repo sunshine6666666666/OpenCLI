@@ -404,10 +404,15 @@ function buildApplySearchFiltersJs(requestedFilters) {
           }
           const options = visibleMatches(groups[0], '.tag-container > .tags')
             .filter((option) => text(option) === request.option);
-          if (options.length !== 1) {
-            return { status: 'layout', detail: options.length ? 'ambiguous_option' : 'option_not_found' };
+          const logicalOptions = Array.from(new Map(options.map((option) => {
+            const rect = option.getBoundingClientRect();
+            const key = [isActive(option), rect.left, rect.top, rect.width, rect.height].join(':');
+            return [key, option];
+          })).values());
+          if (logicalOptions.length !== 1) {
+            return { status: 'layout', detail: logicalOptions.length ? 'ambiguous_option' : 'option_not_found' };
           }
-          return { status: 'ok', option: options[0] };
+          return { status: 'ok', option: logicalOptions[0] };
         };
         const isActive = (option) => option.classList.contains('active');
         const ready = () => visibleMatches(document, 'section.note-item, section:has(a[href*="/search_result/"]), section:has(a[href*="/explore/"]), .search-empty-wrapper').length > 0;
